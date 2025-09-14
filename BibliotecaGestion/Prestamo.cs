@@ -14,6 +14,9 @@ namespace BibliotecaGestion
         public DateTime FechaPrestamo { get; set; }
         public DateTime? FechaDevolucion { get; set; } // '?' permite que sea nulo si no se ha devuelto
 
+        // Propiedad calculada para la fecha esperada de entrega (15 días después del préstamo)
+        public DateTime FechaEntregaEsperada => FechaPrestamo.AddDays(15);
+
         // Constructor
         public Prestamo(int id, int libroId, int usuarioId)
         {

@@ -12,6 +12,9 @@ namespace BibliotecaGestion
 {
     public partial class GestionBiblioteca : Form
     {
+        private int usuarioSeleccionado = -1;
+        private List<dynamic> prestamosDetallados = new List<dynamic>();
+
         public GestionBiblioteca()
         {
             InitializeComponent();
@@ -22,24 +25,17 @@ namespace BibliotecaGestion
             RefrescarUsuarios();
             RefrescarPrestamos();
             CargarComboUsuarios();
+            CargarEstadisticasUsuarios();
         }
 
-        #region Gestión de Usuarios
-
+        #region Métodos de Usuario
+        
         private void RefrescarUsuarios()
         {
             dgvUsuarios.DataSource = null;
             dgvUsuarios.DataSource = BibliotecaManager.Usuarios;
-            
-            // Configurar las columnas del DataGridView de usuarios
-            if (dgvUsuarios.Columns.Count > 0)
-            {
+            if (dgvUsuarios.Columns.Contains("Id"))
                 dgvUsuarios.Columns["Id"].Width = 30;
-                dgvUsuarios.Columns["Nombre"].Width = 80;
-                dgvUsuarios.Columns["Apellido"].Width = 80;
-                dgvUsuarios.Columns["CorreoElectronico"].Width = 150;
-                dgvUsuarios.Columns["CorreoElectronico"].HeaderText = "Correo Electrónico";
-            }
         }
 
         private void btnAñadirUsuario_Click(object sender, EventArgs e)
@@ -49,6 +45,7 @@ namespace BibliotecaGestion
             {
                 RefrescarUsuarios();
                 CargarComboUsuarios();
+                CargarEstadisticasUsuarios();
             }
         }
 
@@ -66,6 +63,7 @@ namespace BibliotecaGestion
                     {
                         RefrescarUsuarios();
                         CargarComboUsuarios();
+                        CargarEstadisticasUsuarios();
                     }
                 }
                 else
@@ -84,10 +82,9 @@ namespace BibliotecaGestion
             if (dgvUsuarios.SelectedRows.Count > 0)
             {
                 int idUsuario = (int)dgvUsuarios.SelectedRows[0].Cells["Id"].Value;
-                string nombreUsuario = (string)dgvUsuarios.SelectedRows[0].Cells["Nombre"].Value;
-                string apellidoUsuario = (string)dgvUsuarios.SelectedRows[0].Cells["Apellido"].Value;
+                string nombreUsuario = (string)dgvUsuarios.SelectedRows[0].Cells["NombreCompleto"].Value;
                 
-                var confirmResult = MessageBox.Show($"¿Estás seguro de que deseas eliminar al usuario '{nombreUsuario} {apellidoUsuario}'?\n\nEsto también eliminará todos sus préstamos asociados.", 
+                var confirmResult = MessageBox.Show($"¿Estás seguro de que deseas eliminar al usuario '{nombreUsuario}'?\nEsto también eliminará todos sus préstamos.", 
                     "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 
                 if (confirmResult == DialogResult.Yes)
@@ -96,6 +93,7 @@ namespace BibliotecaGestion
                     RefrescarUsuarios();
                     RefrescarPrestamos();
                     CargarComboUsuarios();
+                    CargarEstadisticasUsuarios();
                     MessageBox.Show("Usuario eliminado exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -107,51 +105,179 @@ namespace BibliotecaGestion
 
         #endregion
 
-        #region Gestión de Préstamos
+        #region Métodos de Préstamos
 
         private void RefrescarPrestamos()
         {
             // Obtener préstamos con información detallada
-            var prestamosDetallados = BibliotecaManager.Prestamos.Select(p => new
+            prestamosDetallados = BibliotecaManager.Prestamos.Select(p => new
             {
                 Id = p.Id,
                 Libro = BibliotecaManager.ObtenerLibroPorId(p.LibroId)?.Titulo ?? "Libro no encontrado",
                 Usuario = BibliotecaManager.ObtenerUsuarioPorId(p.UsuarioId)?.NombreCompleto ?? "Usuario no encontrado",
                 FechaPrestamo = p.FechaPrestamo,
+                FechaEntregaEsperada = p.FechaEntregaEsperada,
                 FechaDevolucion = p.FechaDevolucion,
                 Estado = p.FechaDevolucion == null ? "Prestado" : "Devuelto"
-            }).ToList();
+            }).ToList<dynamic>();
 
-            dgvPrestamos.DataSource = prestamosDetallados;
-            
-            // Configurar las columnas del DataGridView de préstamos
-            if (dgvPrestamos.Columns.Count > 0)
+            // Filtrar por usuario seleccionado si es necesario
+            if (usuarioSeleccionado != -1)
             {
+                prestamosDetallados = prestamosDetallados.Where(p => 
+                    BibliotecaManager.Prestamos.First(pr => pr.Id == p.Id).UsuarioId == usuarioSeleccionado).ToList();
+            }
+
+            dgvPrestamos.DataSource = null;
+            dgvPrestamos.DataSource = prestamosDetallados;
+
+            // Configurar columnas
+            if (dgvPrestamos.Columns.Contains("Id"))
                 dgvPrestamos.Columns["Id"].Width = 30;
-                dgvPrestamos.Columns["Libro"].Width = 120;
-                dgvPrestamos.Columns["Usuario"].Width = 100;
-                dgvPrestamos.Columns["FechaPrestamo"].Width = 80;
-                dgvPrestamos.Columns["FechaPrestamo"].HeaderText = "Fecha Préstamo";
-                dgvPrestamos.Columns["FechaDevolucion"].Width = 80;
-                dgvPrestamos.Columns["FechaDevolucion"].HeaderText = "Fecha Devolución";
-                dgvPrestamos.Columns["Estado"].Width = 60;
+            if (dgvPrestamos.Columns.Contains("FechaPrestamo"))
+                dgvPrestamos.Columns["FechaPrestamo"].DefaultCellStyle.Format = "dd/MM/yyyy";
+            if (dgvPrestamos.Columns.Contains("FechaEntregaEsperada"))
+                dgvPrestamos.Columns["FechaEntregaEsperada"].DefaultCellStyle.Format = "dd/MM/yyyy";
+            if (dgvPrestamos.Columns.Contains("FechaDevolucion"))
+                dgvPrestamos.Columns["FechaDevolucion"].DefaultCellStyle.Format = "dd/MM/yyyy";
+
+            // Resaltar préstamos vencidos
+            foreach (DataGridViewRow row in dgvPrestamos.Rows)
+            {
+                if (row.Cells["Estado"].Value?.ToString() == "Prestado")
+                {
+                    DateTime fechaEntrega = (DateTime)row.Cells["FechaEntregaEsperada"].Value;
+                    if (fechaEntrega < DateTime.Now)
+                    {
+                        row.DefaultCellStyle.BackColor = Color.FromArgb(255, 235, 238); // Rojo muy suave para vencidos
+                        row.DefaultCellStyle.ForeColor = Color.FromArgb(173, 75, 75); // Texto en rojo elegante
+                    }
+                }
+            }
+
+            // Actualizar información adicional
+            ActualizarInformacionPrestamos();
+        }
+
+        private void ActualizarInformacionPrestamos()
+        {
+            if (usuarioSeleccionado != -1)
+            {
+                int totalPrestamos = prestamosDetallados.Count;
+                int prestamosActivos = prestamosDetallados.Count(p => p.Estado == "Prestado");
+                int prestamosVencidos = prestamosDetallados.Count(p => p.Estado == "Prestado" && p.FechaEntregaEsperada < DateTime.Now);
+                
+                string info = $"Total: {totalPrestamos} | Activos: {prestamosActivos} | Vencidos: {prestamosVencidos}";
+                gbPrestamos.Text = $"📚 Gestionar Préstamos - {info}";
+            }
+            else
+            {
+                gbPrestamos.Text = "📚 Gestionar Préstamos";
             }
         }
 
         private void CargarComboUsuarios()
         {
             cboUsuarios.DataSource = null;
-            cboUsuarios.DataSource = BibliotecaManager.Usuarios;
+            
+            // Crear una lista que incluya una opción "Todos los usuarios"
+            var listaUsuarios = new List<dynamic>();
+            listaUsuarios.Add(new { Id = -1, NombreCompleto = "-- Todos los usuarios --" });
+            
+            foreach (var usuario in BibliotecaManager.Usuarios)
+            {
+                listaUsuarios.Add(new { Id = usuario.Id, NombreCompleto = usuario.NombreCompleto });
+            }
+            
             cboUsuarios.DisplayMember = "NombreCompleto";
             cboUsuarios.ValueMember = "Id";
-            cboUsuarios.SelectedIndex = -1;
+            cboUsuarios.DataSource = listaUsuarios;
+            cboUsuarios.SelectedIndex = 0; // Seleccionar "Todos los usuarios" por defecto
+        }
+
+        private void CargarEstadisticasUsuarios()
+        {
+            var estadisticas = new List<dynamic>();
+
+            foreach (var usuario in BibliotecaManager.Usuarios)
+            {
+                var prestamosUsuario = BibliotecaManager.ObtenerPrestamosPorUsuario(usuario.Id);
+                var prestamosActivos = prestamosUsuario.Count(p => p.FechaDevolucion == null);
+                var prestamosDevueltos = prestamosUsuario.Count(p => p.FechaDevolucion != null);
+                var prestamosVencidos = prestamosUsuario.Count(p => p.FechaDevolucion == null && p.FechaEntregaEsperada < DateTime.Now);
+
+                estadisticas.Add(new
+                {
+                    Usuario = usuario.NombreCompleto,
+                    TotalPrestamos = prestamosUsuario.Count,
+                    PrestamosActivos = prestamosActivos,
+                    PrestamosDevueltos = prestamosDevueltos,
+                    PrestamosVencidos = prestamosVencidos
+                });
+            }
+
+            dgvEstadisticasUsuarios.DataSource = estadisticas;
+
+            // Configurar columnas
+            if (dgvEstadisticasUsuarios.Columns.Contains("Usuario"))
+                dgvEstadisticasUsuarios.Columns["Usuario"].HeaderText = "Usuario";
+            if (dgvEstadisticasUsuarios.Columns.Contains("TotalPrestamos"))
+                dgvEstadisticasUsuarios.Columns["TotalPrestamos"].HeaderText = "Total";
+            if (dgvEstadisticasUsuarios.Columns.Contains("PrestamosActivos"))
+                dgvEstadisticasUsuarios.Columns["PrestamosActivos"].HeaderText = "Activos";
+            if (dgvEstadisticasUsuarios.Columns.Contains("PrestamosDevueltos"))
+                dgvEstadisticasUsuarios.Columns["PrestamosDevueltos"].HeaderText = "Devueltos";
+            if (dgvEstadisticasUsuarios.Columns.Contains("PrestamosVencidos"))
+                dgvEstadisticasUsuarios.Columns["PrestamosVencidos"].HeaderText = "Vencidos";
+
+            // Resaltar filas con préstamos vencidos
+            foreach (DataGridViewRow row in dgvEstadisticasUsuarios.Rows)
+            {
+                if (row.Cells["PrestamosVencidos"].Value != null)
+                {
+                    int vencidos = (int)row.Cells["PrestamosVencidos"].Value;
+                    if (vencidos > 0)
+                    {
+                        row.DefaultCellStyle.BackColor = Color.FromArgb(255, 235, 238); // Rojo muy suave para vencidos
+                        row.DefaultCellStyle.ForeColor = Color.FromArgb(173, 75, 75); // Texto en rojo elegante
+                    }
+                }
+            }
+        }
+
+        private void cboUsuarios_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cboUsuarios.SelectedValue != null)
+            {
+                usuarioSeleccionado = (int)cboUsuarios.SelectedValue;
+                RefrescarPrestamos();
+            }
         }
 
         private void btnAñadirPrestamos_Click(object sender, EventArgs e)
         {
-            // Aquí puedes implementar un formulario para añadir préstamos
-            // Por ahora, mostraremos un mensaje simple
-            MessageBox.Show("Funcionalidad de añadir préstamos pendiente de implementar.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // Verificar que haya usuarios y libros disponibles
+            if (BibliotecaManager.Usuarios.Count == 0)
+            {
+                MessageBox.Show("No hay usuarios registrados. Debe añadir al menos un usuario antes de crear préstamos.", 
+                    "Sin usuarios", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (BibliotecaManager.ObtenerLibrosDisponibles().Count == 0)
+            {
+                MessageBox.Show("No hay libros disponibles para préstamo. Todos los libros están actualmente prestados.", 
+                    "Sin libros disponibles", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            FormPrestamoDetalles formDetalles = new FormPrestamoDetalles();
+            if (formDetalles.ShowDialog() == DialogResult.OK)
+            {
+                RefrescarPrestamos();
+                CargarEstadisticasUsuarios();
+                MessageBox.Show("Préstamo añadido exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void btnEditarPrestamo_Click(object sender, EventArgs e)
@@ -159,29 +285,21 @@ namespace BibliotecaGestion
             if (dgvPrestamos.SelectedRows.Count > 0)
             {
                 int idPrestamo = (int)dgvPrestamos.SelectedRows[0].Cells["Id"].Value;
-                string estado = (string)dgvPrestamos.SelectedRows[0].Cells["Estado"].Value;
+                var prestamo = BibliotecaManager.ObtenerPrestamoPorId(idPrestamo);
                 
-                if (estado == "Prestado")
+                if (prestamo != null)
                 {
-                    var confirmResult = MessageBox.Show("¿Deseas marcar este préstamo como devuelto?", 
-                        "Devolver libro", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    
-                    if (confirmResult == DialogResult.Yes)
+                    FormPrestamoDetalles formDetalles = new FormPrestamoDetalles(prestamo);
+                    if (formDetalles.ShowDialog() == DialogResult.OK)
                     {
-                        if (BibliotecaManager.DevolverLibroPorId(idPrestamo))
-                        {
-                            RefrescarPrestamos();
-                            MessageBox.Show("Libro devuelto exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        else
-                        {
-                            MessageBox.Show("Error al devolver el libro.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
+                        RefrescarPrestamos();
+                        CargarEstadisticasUsuarios();
+                        MessageBox.Show("Préstamo actualizado exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Este préstamo ya ha sido devuelto.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("No se pudo encontrar el préstamo seleccionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
@@ -204,7 +322,10 @@ namespace BibliotecaGestion
                 if (confirmResult == DialogResult.Yes)
                 {
                     BibliotecaManager.Prestamos.RemoveAll(p => p.Id == idPrestamo);
+                    // Notificar cambios manualmente para este caso específico
+                    BibliotecaManager.NotificarCambios();
                     RefrescarPrestamos();
+                    CargarEstadisticasUsuarios();
                     MessageBox.Show("Préstamo eliminado exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -215,5 +336,10 @@ namespace BibliotecaGestion
         }
 
         #endregion
+
+        private void gbEstadisticas_Enter(object sender, EventArgs e)
+        {
+
+        }
     }
 }
