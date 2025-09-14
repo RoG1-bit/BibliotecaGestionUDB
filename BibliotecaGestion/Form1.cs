@@ -25,10 +25,12 @@ namespace BibliotecaGestion
         {
             BibliotecaManager.CargarDatosIniciales();
             RefrescarTabla();
+            ActualizarGraficos();
         }
+        
         private void RefrescarTabla()
         {
-          RefrescarLibros();
+            RefrescarLibros();
         }
 
         private void RefrescarLibros()
@@ -70,22 +72,38 @@ namespace BibliotecaGestion
 
         private void btnAñadir_Click(object sender, EventArgs e)
         {
-            BibliotecaManager.AgregarLibro("Nuevo Libro", "Autor Desconocido", 2025);
-            RefrescarTabla();
-            MessageBox.Show("Libro añadido exitosamente.");
+            FormLibroDetalles formDetalles = new FormLibroDetalles();
+            if (formDetalles.ShowDialog() == DialogResult.OK)
+            {
+                RefrescarTabla();
+                ActualizarGraficos();
+            }
         }
-
 
         private void btnEditar_Click(object sender, EventArgs e)
         {
             if (dgvLibros.SelectedRows.Count > 0)
             {
                 int idLibro = (int)dgvLibros.SelectedRows[0].Cells["Id"].Value;
-                MessageBox.Show("Funcionalidad de edición pendiente de implementar para el libro con ID: " + idLibro);
+                Libro libroSeleccionado = BibliotecaManager.ObtenerLibroPorId(idLibro);
+                
+                if (libroSeleccionado != null)
+                {
+                    FormLibroDetalles formDetalles = new FormLibroDetalles(libroSeleccionado);
+                    if (formDetalles.ShowDialog() == DialogResult.OK)
+                    {
+                        RefrescarTabla();
+                        ActualizarGraficos();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No se pudo encontrar el libro seleccionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             else
             {
-                MessageBox.Show("Selecciona un libro para editar.");
+                MessageBox.Show("Selecciona un libro para editar.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -95,17 +113,18 @@ namespace BibliotecaGestion
             {
                 int idLibro = (int)dgvLibros.SelectedRows[0].Cells["Id"].Value;
                 string tituloLibro = (string)dgvLibros.SelectedRows[0].Cells["Titulo"].Value;
-                var confirmResult = MessageBox.Show($"¿Estás seguro de que deseas eliminar el libro '{tituloLibro}'?", "Confirmar eliminación", MessageBoxButtons.YesNo);
+                var confirmResult = MessageBox.Show($"¿Estás seguro de que deseas eliminar el libro '{tituloLibro}'?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (confirmResult == DialogResult.Yes)
                 {
                     BibliotecaManager.EliminarLibro(idLibro);
                     RefrescarTabla();
-                    MessageBox.Show("Libro eliminado exitosamente.");
+                    ActualizarGraficos();
+                    MessageBox.Show("Libro eliminado exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-                else
-                {
-                    MessageBox.Show("Selecciona un libro para eliminar.");
-                }
+            }
+            else
+            {
+                MessageBox.Show("Selecciona un libro para eliminar.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
