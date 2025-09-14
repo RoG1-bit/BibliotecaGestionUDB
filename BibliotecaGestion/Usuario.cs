@@ -11,14 +11,19 @@ namespace BibliotecaGestion
     {
         public int Id { get; set; }
         public string Nombre { get; set; }
+        public string Apellido { get; set; }
         public string CorreoElectronico { get; set; }
 
         // Constructor
-        public Usuario(int id, string nombre, string correo)
+        public Usuario(int id, string nombre, string apellido, string correo)
         {
             Id = id;
             Nombre = nombre;
+            Apellido = apellido;
             CorreoElectronico = correo;
         }
+
+        // Método para obtener el nombre completo
+        public string NombreCompleto => $"{Nombre} {Apellido}";
     }
 }

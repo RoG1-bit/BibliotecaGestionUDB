@@ -37,9 +37,9 @@ namespace BibliotecaGestion
             AgregarLibro("Orgullo y Prejuicio", "Jane Austen", 1813);
 
             // Añadir Usuarios
-            AgregarUsuario("Juan Pérez", "juan.perez@email.com");
-            AgregarUsuario("María Gómez", "maria.gomez@email.com");
-            AgregarUsuario("Ana Torres", "ana.torres@email.com");
+            AgregarUsuario("Juan", "Pérez", "juan.perez@email.com");
+            AgregarUsuario("María", "Gómez", "maria.gomez@email.com");
+            AgregarUsuario("Ana", "Torres", "ana.torres@email.com");
 
             // Añadir Prestamos de ejemplo
             RealizarPrestamo(1, 1); // Juan Pérez toma prestado El Gran Gatsby
@@ -77,17 +77,18 @@ namespace BibliotecaGestion
 
         #region Métodos CRUD para Usuarios
 
-        public static void AgregarUsuario(string nombre, string correo)
+        public static void AgregarUsuario(string nombre, string apellido, string correo)
         {
-            Usuarios.Add(new Usuario(proximoIdUsuario++, nombre, correo));
+            Usuarios.Add(new Usuario(proximoIdUsuario++, nombre, apellido, correo));
         }
 
-        public static void EditarUsuario(int id, string nuevoNombre, string nuevoCorreo)
+        public static void EditarUsuario(int id, string nuevoNombre, string nuevoApellido, string nuevoCorreo)
         {
             Usuario usuario = Usuarios.FirstOrDefault(u => u.Id == id);
             if (usuario != null)
             {
                 usuario.Nombre = nuevoNombre;
+                usuario.Apellido = nuevoApellido;
                 usuario.CorreoElectronico = nuevoCorreo;
             }
         }

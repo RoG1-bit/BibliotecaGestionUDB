@@ -60,6 +60,18 @@
     <Compile Include="FormLibroDetalles.Designer.cs">
       <DependentUpon>FormLibroDetalles.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormUsuarioDetalles.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormUsuarioDetalles.Designer.cs">
+      <DependentUpon>FormUsuarioDetalles.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GestionBiblioteca.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GestionBiblioteca.Designer.cs">
+      <DependentUpon>GestionBiblioteca.cs</DependentUpon>
+    </Compile>
     <Compile Include="Libro.cs" />
     <Compile Include="Prestamo.cs" />
     <Compile Include="Program.cs" />
@@ -70,6 +82,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormLibroDetalles.resx">
       <DependentUpon>FormLibroDetalles.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GestionBiblioteca.resx">
+      <DependentUpon>GestionBiblioteca.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

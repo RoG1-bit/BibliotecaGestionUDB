@@ -130,10 +130,8 @@ namespace BibliotecaGestion
 
         private void btnDocumentacion_Click(object sender, EventArgs e)
         {
-            // Comentamos esta línea hasta que se cree la forma GestionBiblioteca
-            // GestionBiblioteca docForm = new GestionBiblioteca();
-            // docForm.ShowDialog();
-            MessageBox.Show("Funcionalidad de documentación pendiente de implementar.");
+            GestionBiblioteca docForm = new GestionBiblioteca();
+            docForm.ShowDialog();
         }
     }
 }

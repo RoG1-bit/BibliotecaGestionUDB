@@ -57,7 +57,7 @@
             this.dgvLibros.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvLibros.Location = new System.Drawing.Point(47, 44);
             this.dgvLibros.Name = "dgvLibros";
-            this.dgvLibros.Size = new System.Drawing.Size(835, 188);
+            this.dgvLibros.Size = new System.Drawing.Size(387, 188);
             this.dgvLibros.TabIndex = 0;
             // 
             // btnAñadir
@@ -82,7 +82,7 @@
             // 
             // btnEliminar
             // 
-            this.btnEliminar.Location = new System.Drawing.Point(244, 270);
+            this.btnEliminar.Location = new System.Drawing.Point(245, 268);
             this.btnEliminar.Name = "btnEliminar";
             this.btnEliminar.Size = new System.Drawing.Size(75, 23);
             this.btnEliminar.TabIndex = 3;
@@ -118,7 +118,7 @@
             // 
             // btnDocumentacion
             // 
-            this.btnDocumentacion.Location = new System.Drawing.Point(487, 388);
+            this.btnDocumentacion.Location = new System.Drawing.Point(368, 270);
             this.btnDocumentacion.Name = "btnDocumentacion";
             this.btnDocumentacion.Size = new System.Drawing.Size(99, 23);
             this.btnDocumentacion.TabIndex = 7;
@@ -132,7 +132,7 @@
             this.chartBooks.ChartAreas.Add(chartArea2);
             legend2.Name = "Legend1";
             this.chartBooks.Legends.Add(legend2);
-            this.chartBooks.Location = new System.Drawing.Point(973, 9);
+            this.chartBooks.Location = new System.Drawing.Point(581, 30);
             this.chartBooks.Name = "chartBooks";
             series2.ChartArea = "ChartArea1";
             series2.Legend = "Legend1";
@@ -148,7 +148,7 @@
             this.chartUsers.ChartAreas.Add(chartArea3);
             legend3.Name = "Legend1";
             this.chartUsers.Legends.Add(legend3);
-            this.chartUsers.Location = new System.Drawing.Point(973, 161);
+            this.chartUsers.Location = new System.Drawing.Point(581, 174);
             this.chartUsers.Name = "chartUsers";
             series3.ChartArea = "ChartArea1";
             series3.Legend = "Legend1";
@@ -162,7 +162,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1361, 461);
+            this.ClientSize = new System.Drawing.Size(900, 344);
             this.Controls.Add(this.chartUsers);
             this.Controls.Add(this.chartBooks);
             this.Controls.Add(this.btnDocumentacion);
